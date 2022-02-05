@@ -15,7 +15,7 @@ The look of `turing-machine-py` programming interface has been inspired by [turi
 - To create your own Turing Machine program, import these classes from the package:
 
 ```python
-from turing_machine_py import TuringMachine, State, Instruction
+from turing_machine_py import State, Instruction, TuringMachine
 ```
 
 - `State` is the state of the TM that carries name and list of `Instruction`. One state can have many `Instruction`.
