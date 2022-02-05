@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "turing-machine-py"
+version = "0.1.0"
+description = ""
+authors = ["Filips Nastins <nastinsfilips@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+isort = "^5.10.1"
+mypy = "^0.931"
+pre-commit = "^2.17.0"
+pylint = "^2.12.2"
+pytest = "^7.0.0"
+pytest-cov = "^3.0.0"
+
+[tool.poetry.scripts]
+hooks = "scripts:hooks"
+format = "scripts:format"
+lint = "scripts:lint"
+test = "scripts:test"
+test-cov-term = "scripts:test_cov_term"
+test-cov-html = "scripts:test_cov_html"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+    "src/turing_machine_py"
+]
+norecursedirs = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "__init__.py",
+    ".mypy_cache",
+    ".pytest_cache"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
