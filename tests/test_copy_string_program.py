@@ -4,7 +4,7 @@ from turing_machine_py import Instruction, State, TuringMachine
 
 
 @pytest.mark.parametrize(("input_data"), ["", "1", "11", "111", "1111111"])
-def test_copy_input_to_the_right(input_data):
+def test_copy_input_to_the_right(input_data: str) -> None:
     """Copy given input to the right.
     Alphabet: { 1 }
 
@@ -66,3 +66,8 @@ def test_copy_input_to_the_right(input_data):
     result = turing_machine.run()
 
     assert result == input_data + input_data
+
+
+# @pytest.mark.parametrize(("input_data"), ["", "1", "11", "111", "1111111"])
+# def test_copy_input_to_the_left(input_data):
+#     raise NotImplementedError

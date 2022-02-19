@@ -12,77 +12,82 @@ class TuringMachine:
     _tape: Tape
     _head: Head
     _states: Dict[str, State]
-
-    _current_state: State
-    _current_instruction: Instruction
-    _current_value: str
+    _start_state: State
+    _log: bool
 
     def __init__(
         self,
         input_data: str,
-        start_state: str,
         states: List[State],
+        start_state: str,
         blank: str = " ",
         log: bool = False,
     ):
-        self._log = log
         self._tape = Tape(input_data, blank)
         self._head = Head(self._tape)
-        self._hash_states(states)
-        self._set_start_state(start_state)
+        self._states = self._hash_states_by_state_name(states)
+        self._start_state = self._get_state_by_name(start_state)
+        self._log = log
+
+    # pylint: disable=no-self-use
+    def _hash_states_by_state_name(self, states: List[State]) -> Dict[str, State]:
+        return {state.name: state for state in states}
+
+    def _get_state_by_name(self, state: str) -> State:
+        try:
+            return self._states[state]
+        except KeyError as exc:
+            raise ValueError(f"State not found: {state}") from exc
 
     def run(self) -> str:
+        return self._run_recursion(current_state=self._start_state)
+
+    def _run_recursion(self, current_state: State) -> str:
+        self._log_machine_state_if_log_enabled(state=current_state)
+        current_value = self._read_current_value()
+        try:
+            current_instruction = self._fetch_instruction(current_state, current_value)
+            self._execute_instruction(current_instruction)
+            next_state = self._next_state(current_instruction)
+        except HaltSignal:
+            return self._tape_output()
+        return self._run_recursion(current_state=next_state)
+
+    def _log_machine_state_if_log_enabled(self, state: State) -> None:
         if self._log:
             logger.info(
                 "head: %s; state: %s; tape: %s",
-                self._head.current_position,
-                self._current_state.name,
-                self._tape.print(),
+                self._head_poisition(),
+                state.name,
+                self._tape_output(),
             )
-        try:
-            self._read_current_value()
-            self._fetch_instruction()
-            self._execute_instruction()
-            self._next_state()
-        except StopIteration:
-            return self._tape.print()
-        return self.run()
 
-    def _hash_states(self, states: List[State]):
-        self._states = {state.name: state for state in states}
+    def _head_poisition(self) -> int:
+        return self._head.current_position
 
-    def _set_start_state(self, start_state):
-        try:
-            self._current_state = self._states[start_state]
-        except KeyError as exc:
-            raise ValueError(f"Start state not found: '{start_state}'") from exc
+    def _tape_output(self) -> str:
+        return self._tape.output()
 
-    def _read_current_value(self):
-        self._current_value = self._head.read()
+    def _read_current_value(self) -> str:
+        return self._head.read()
 
-    def _fetch_instruction(self):
-        if not self._current_state.instructions:
-            self._halt()
-        for instruction in self._current_state.instructions:
-            if self._current_value in instruction.meet:
-                self._current_instruction = instruction
-                return
-        raise ValueError(
-            (
-                f"Instruction not found for value: '{self._current_value}'"
-                f"on state: '{self._current_state.name}'"
-            )
-        )
+    def _fetch_instruction(self, state: State, value: str) -> Instruction:
+        if not state.instructions:
+            raise HaltSignal
+        for instruction in state.instructions:
+            if value in instruction.meet:
+                return instruction
+        raise ValueError(f"Instruction not found for value: {value} on state: {state.name}")
 
-    def _execute_instruction(self):
-        self._execute_write()
-        self._execute_move()
+    def _execute_instruction(self, instruction: Instruction) -> None:
+        self._execute_write(instruction)
+        self._execute_move(instruction)
 
-    def _execute_write(self):
-        self._head.write(self._current_instruction.write)
+    def _execute_write(self, instruction: Instruction) -> None:
+        self._head.write(instruction.write)
 
-    def _execute_move(self):
-        move = self._current_instruction.move
+    def _execute_move(self, instruction: Instruction) -> None:
+        move = instruction.move
         if not move:
             return
         if move == "R":
@@ -90,31 +95,29 @@ class TuringMachine:
         elif move == "L":
             self._head.move_left()
         else:
-            raise ValueError(f"Invalid move command: '{move}'")
+            raise ValueError(f"Invalid move command: {move}")
 
-    def _next_state(self):
-        if not self._current_state.instructions:
-            self._halt()
-        # mypy is complaining about self._current_instruction.set being None without this if check
-        if self._current_instruction.set:
-            self._current_state = self._states[self._current_instruction.set]
-
-    def _halt(self):
-        raise StopIteration("Halt!")
+    def _next_state(self, instruction: Instruction) -> State:
+        if not instruction.set:
+            raise HaltSignal
+        return self._states[instruction.set]
 
 
 class Tape:
     _tape: List[str]
 
-    def __init__(self, input_data: str, blank):
+    def __init__(self, input_data: str, blank: str):
         self._tape = list(input_data)
         self._blank = blank
 
-    def write(self, index: int, value: str):
+    def write(self, index: int, value: str) -> None:
         try:
             self._tape[index] = value
         except IndexError:
             self._tape.insert(index, value)
+
+    def shift_left(self) -> None:
+        self._tape.insert(0, self._blank)
 
     def read(self, index: int) -> str:
         try:
@@ -123,11 +126,8 @@ class Tape:
             self.write(index, self._blank)
             return self.read(index)
 
-    def print(self) -> str:
+    def output(self) -> str:
         return "".join(self._tape).strip()
-
-    def compensate_negative_index(self):
-        self._tape.insert(0, self._blank)
 
 
 class Head:
@@ -145,14 +145,19 @@ class Head:
     def read(self) -> str:
         return self._tape.read(self._index)
 
-    def write(self, value: str):
+    def write(self, value: str) -> None:
         self._tape.write(self._index, value)
 
-    def move_left(self):
+    def move_left(self) -> None:
         self._index -= 1
+        # Compensate negative index
         if (self._index) < 0:
-            self._tape.compensate_negative_index()
+            self._tape.shift_left()
             self._index = 0
 
-    def move_right(self):
+    def move_right(self) -> None:
         self._index += 1
+
+
+class HaltSignal(Exception):
+    pass

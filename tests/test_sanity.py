@@ -3,7 +3,7 @@ import pytest
 from turing_machine_py import Instruction, State, TuringMachine
 
 
-def test_unknown_start_state_raises_value_error():
+def test_unknown_start_state_raises_value_error() -> None:
     with pytest.raises(ValueError):
         states = [State(name="first")]
 
@@ -14,7 +14,7 @@ def test_unknown_start_state_raises_value_error():
         turing_machine.run()
 
 
-def test_empty_state_gives_the_same_output():
+def test_empty_state_gives_the_same_output() -> None:
     input_data = "110"
     states = [State(name="start")]
 
@@ -26,7 +26,7 @@ def test_empty_state_gives_the_same_output():
     assert result == input_data
 
 
-def test_invalid_move_direction_raises_value_error():
+def test_invalid_move_direction_raises_value_error() -> None:
     states = [
         State(
             name="start",
@@ -39,7 +39,7 @@ def test_invalid_move_direction_raises_value_error():
         turing_machine.run()
 
 
-def test_instruction_encountered_unknown_value_raises_value_error():
+def test_instruction_encountered_unknown_value_raises_value_error() -> None:
     states = [
         State(
             name="start",
@@ -52,7 +52,7 @@ def test_instruction_encountered_unknown_value_raises_value_error():
         turing_machine.run()
 
 
-def test_print_the_same_1_to_the_right():
+def test_print_the_same_1_to_the_right() -> None:
     """Input: 1; Output: 11
     Alphabet: { 1 }
 
@@ -64,7 +64,7 @@ def test_print_the_same_1_to_the_right():
         ),
         State(
             name="write",
-            instructions=[Instruction(meet=[" "], write="1", move="L", set="done")],
+            instructions=[Instruction(meet=[" "], write="1", move="L")],
         ),
         State(name="done"),
     ]
@@ -75,7 +75,7 @@ def test_print_the_same_1_to_the_right():
     assert result == "11"
 
 
-def test_print_the_same_1_to_the_left():
+def test_print_the_same_1_to_the_left() -> None:
     """Input: 1; Output: 11
     Alphabet: { 1 }
 
@@ -90,6 +90,28 @@ def test_print_the_same_1_to_the_left():
             instructions=[Instruction(meet=[" "], write="1", move="R", set="done")],
         ),
         State(name="done"),
+    ]
+
+    turing_machine = TuringMachine(input_data="1", start_state="left", states=states, log=True)
+    result = turing_machine.run()
+
+    assert result == "11"
+
+
+def test_last_instruction_without_set_halts() -> None:
+    """Input: 1; Output: 11
+    Alphabet: { 1 }
+
+    """
+    states = [
+        State(
+            name="left",
+            instructions=[Instruction(meet=["1"], write="1", move="L", set="write")],
+        ),
+        State(
+            name="write",
+            instructions=[Instruction(meet=[" "], write="1", move="R")],
+        ),
     ]
 
     turing_machine = TuringMachine(input_data="1", start_state="left", states=states, log=True)

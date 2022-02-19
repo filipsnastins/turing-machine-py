@@ -51,6 +51,8 @@ Check out examples in [tests](tests) folder - it contains few sample programs wi
     source ./venv/bin/activate  # Linux
     ```
 
+    - Install the `turing_machine_py` package
+
     ```
     python -m pip install -U pip setuptools wheel
     pip install -r requirements.txt
