@@ -25,12 +25,12 @@ class TuringMachine:
     ):
         self._tape = Tape(input_data, blank)
         self._head = Head(self._tape)
-        self._states = self._hash_states_by_state_name(states)
+        self._states = self._hash_states_by_name(states)
         self._start_state = self._get_state_by_name(start_state)
         self._log = log
 
     # pylint: disable=no-self-use
-    def _hash_states_by_state_name(self, states: List[State]) -> Dict[str, State]:
+    def _hash_states_by_name(self, states: List[State]) -> Dict[str, State]:
         return {state.name: state for state in states}
 
     def _get_state_by_name(self, state: str) -> State:
@@ -43,7 +43,7 @@ class TuringMachine:
         return self._run_recursion(current_state=self._start_state)
 
     def _run_recursion(self, current_state: State) -> str:
-        self._log_machine_state_if_log_enabled(state=current_state)
+        self._log_state_if_log_is_enabled(state=current_state)
         current_value = self._read_current_value()
         try:
             current_instruction = self._fetch_instruction(current_state, current_value)
@@ -53,7 +53,7 @@ class TuringMachine:
             return self._tape_output()
         return self._run_recursion(current_state=next_state)
 
-    def _log_machine_state_if_log_enabled(self, state: State) -> None:
+    def _log_state_if_log_is_enabled(self, state: State) -> None:
         if self._log:
             logger.info(
                 "head: %s; state: %s; tape: %s",
