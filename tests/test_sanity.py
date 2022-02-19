@@ -99,10 +99,7 @@ def test_print_the_same_1_to_the_left() -> None:
 
 
 def test_last_instruction_without_set_halts() -> None:
-    """Input: 1; Output: 11
-    Alphabet: { 1 }
-
-    """
+    """The same test as test_print_the_same_1_to_the_left, but done state is omitted."""
     states = [
         State(
             name="left",

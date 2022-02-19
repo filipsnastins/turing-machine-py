@@ -100,7 +100,7 @@ class TuringMachine:
     def _next_state(self, instruction: Instruction) -> State:
         if not instruction.set:
             raise HaltSignal
-        return self._states[instruction.set]
+        return self._get_state_by_name(instruction.set)
 
 
 class Tape:

@@ -68,6 +68,68 @@ def test_copy_input_to_the_right(input_data: str) -> None:
     assert result == input_data + input_data
 
 
-# @pytest.mark.parametrize(("input_data"), ["", "1", "11", "111", "1111111"])
-# def test_copy_input_to_the_left(input_data):
-#     raise NotImplementedError
+@pytest.mark.parametrize(("input_data"), ["", "1", "11", "111", "1111111"])
+def test_copy_input_to_the_left(input_data: str) -> None:
+    states = [
+        State(
+            name="start",
+            instructions=[
+                # Move head to the right and only then start copying
+                Instruction(meet=["1"], write="1", move="R", set="start"),
+                Instruction(meet=[" "], write=" ", move="L", set="replace-first"),
+            ],
+        ),
+        State(
+            name="replace-first",
+            instructions=[
+                Instruction(meet=["1"], write="*", move="L", set="carry-first"),
+                # If empty input in the beggining
+                Instruction(meet=[" "], write=" ", move=None, set="done"),
+            ],
+        ),
+        State(
+            name="carry-first",
+            instructions=[
+                Instruction(meet=["1"], write="1", move="L", set="carry-first"),
+                Instruction(meet=[" "], write="<", move="R", set="right"),
+            ],
+        ),
+        State(
+            name="right",
+            instructions=[
+                Instruction(meet=["1"], write="1", move="R", set="right"),
+                Instruction(meet=["<"], write="<", move="R", set="right"),
+                Instruction(meet=["*"], write="1", move="L", set="copy"),
+            ],
+        ),
+        State(
+            name="copy",
+            instructions=[
+                Instruction(meet=["1"], write="*", move="L", set="carry"),
+                Instruction(meet=["<"], write="1", move="R", set="return"),
+            ],
+        ),
+        State(
+            name="return",
+            instructions=[
+                Instruction(meet=["1"], write="1", move="R", set="return"),
+                Instruction(meet=[" "], write=" ", move="L", set="done"),
+            ],
+        ),
+        State(
+            name="carry",
+            instructions=[
+                Instruction(meet=["1"], write="1", move="L", set="carry"),
+                Instruction(meet=["<"], write="<", move="L", set="carry"),
+                Instruction(meet=[" "], write="1", move="R", set="right"),
+            ],
+        ),
+        State(name="done"),
+    ]
+
+    turing_machine = TuringMachine(
+        input_data=input_data, start_state="start", states=states, log=True
+    )
+    result = turing_machine.run()
+
+    assert result == input_data + input_data
