@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import logging
 from typing import Dict, List
 
 from .models import Instruction, State
-
-logger = logging.getLogger()
 
 
 class TuringMachine:
@@ -43,23 +40,20 @@ class TuringMachine:
         return self._run_recursion(current_state=self._start_state)
 
     def _run_recursion(self, current_state: State) -> str:
-        self._log_state_if_log_is_enabled(state=current_state)
+        self._print_state_if_log_is_enabled(state=current_state)
         current_value = self._read_current_value()
         try:
             current_instruction = self._fetch_instruction(current_state, current_value)
             self._execute_instruction(current_instruction)
             next_state = self._next_state(current_instruction)
+            return self._run_recursion(current_state=next_state)
         except HaltSignal:
             return self._tape_output()
-        return self._run_recursion(current_state=next_state)
 
-    def _log_state_if_log_is_enabled(self, state: State) -> None:
+    def _print_state_if_log_is_enabled(self, state: State) -> None:
         if self._log:
-            logger.info(
-                "head: %s; state: %s; tape: %s",
-                self._head_poisition(),
-                state.name,
-                self._tape_output(),
+            print(
+                f"head: {self._head_poisition()}; state: {state.name}; tape: {self._tape_output()}"
             )
 
     def _head_poisition(self) -> int:
